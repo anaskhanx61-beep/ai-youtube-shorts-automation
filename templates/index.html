@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Shorts Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>AI YouTube Shorts Automation</h1>
+        <p>Generate scripts, create videos, and schedule your next short.</p>
+      </header>
+
+      <section class="panel">
+        <h2>Generate a new Short</h2>
+        <form id="generateForm">
+          <label for="topic">Topic</label>
+          <input id="topic" name="topic" type="text" value="{{ default_topic }}" required />
+
+          <label class="checkbox-row">
+            <input id="uploadToYouTube" type="checkbox" />
+            <span>Upload to YouTube after creation</span>
+          </label>
+
+          <button type="submit">Generate</button>
+        </form>
+      </section>
+
+      <section class="panel">
+        <h2>Schedule daily video</h2>
+        <form id="scheduleForm">
+          <label for="scheduledTopic">Topic</label>
+          <input id="scheduledTopic" name="scheduledTopic" type="text" value="{{ default_topic }}" required />
+
+          <div class="time-grid">
+            <div>
+              <label for="scheduleHour">Hour</label>
+              <input id="scheduleHour" type="number" min="0" max="23" value="9" />
+            </div>
+            <div>
+              <label for="scheduleMinute">Minute</label>
+              <input id="scheduleMinute" type="number" min="0" max="59" value="0" />
+            </div>
+          </div>
+
+          <label class="checkbox-row">
+            <input id="scheduleUpload" type="checkbox" />
+            <span>Upload to YouTube</span>
+          </label>
+
+          <button type="submit">Schedule</button>
+        </form>
+      </section>
+
+      <section class="panel result-panel">
+        <h2>Result</h2>
+        <div id="resultBox">No video generated yet.</div>
+      </section>
+    </div>
+
+    <script>
+      document.getElementById('generateForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const topic = document.getElementById('topic').value;
+        const uploadToYouTube = document.getElementById('uploadToYouTube').checked;
+        const resultBox = document.getElementById('resultBox');
+
+        resultBox.textContent = 'Generating video...';
+
+        try {
+          const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic, upload_to_youtube: uploadToYouTube })
+          });
+
+          const data = await response.json();
+          if (response.ok) {
+            resultBox.innerHTML = `
+              <strong>Title:</strong> ${data.title}<br>
+              <strong>Script:</strong> ${data.script}<br>
+              <strong>Video:</strong> ${data.video_path}<br>
+              ${data.youtube_upload ? `<strong>YouTube:</strong> ${JSON.stringify(data.youtube_upload)}` : ''}
+            `;
+          } else {
+            resultBox.textContent = data.error || 'Something went wrong';
+          }
+        } catch (error) {
+          resultBox.textContent = 'Error generating video';
+        }
+      });
+
+      document.getElementById('scheduleForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const topic = document.getElementById('scheduledTopic').value;
+        const hour = document.getElementById('scheduleHour').value;
+        const minute = document.getElementById('scheduleMinute').value;
+        const scheduleUpload = document.getElementById('scheduleUpload').checked;
+
+        const response = await fetch('/api/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, hour, minute, upload_to_youtube: scheduleUpload })
+        });
+
+        const data = await response.json();
+        const resultBox = document.getElementById('resultBox');
+        resultBox.innerHTML = `<strong>Scheduled:</strong> ${data.status}<br><strong>Time:</strong> ${data.time}<br><strong>Topic:</strong> ${data.topic}`;
+      });
+    </script>
+  </body>
+</html>

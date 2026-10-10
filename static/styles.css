@@ -1,114 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Shorts Generator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-  </head>
-  <body>
-    <div class="container">
-      <header class="header">
-        <h1>AI YouTube Shorts Automation</h1>
-        <p>Generate scripts, create videos, and schedule content.</p>
-      </header>
+body {
+  margin: 0;
+  background: #0f172a;
+  color: white;
+  font-family: Arial, sans-serif;
+}
 
-      <section class="panel">
-        <h2>Generate a new Short</h2>
-        <form id="generateForm">
-          <label for="topic">Topic</label>
-          <input id="topic" name="topic" type="text" value="{{ default_topic }}" required />
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
 
-          <label class="checkbox-row">
-            <input id="uploadToYouTube" type="checkbox" />
-            <span>Upload to YouTube after creation</span>
-          </label>
+.header {
+  margin-bottom: 24px;
+}
 
-          <button type="submit">Generate</button>
-        </form>
-      </section>
+.header h1 {
+  margin-bottom: 8px;
+}
 
-      <section class="panel">
-        <h2>Schedule daily video</h2>
-        <form id="scheduleForm">
-          <label for="scheduledTopic">Topic</label>
-          <input id="scheduledTopic" name="scheduledTopic" type="text" value="{{ default_topic }}" required />
+.panel {
+  background: #111827;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+}
 
-          <div class="time-grid">
-            <div>
-              <label for="scheduleHour">Hour</label>
-              <input id="scheduleHour" type="number" min="0" max="23" value="9" />
-            </div>
-            <div>
-              <label for="scheduleMinute">Minute</label>
-              <input id="scheduleMinute" type="number" min="0" max="59" value="0" />
-            </div>
-          </div>
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
 
-          <label class="checkbox-row">
-            <input id="scheduleUpload" type="checkbox" />
-            <span>Upload to YouTube</span>
-          </label>
+label {
+  font-weight: 600;
+}
 
-          <button type="submit">Schedule</button>
-        </form>
-      </section>
+input {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #374151;
+  background: #0f172a;
+  color: white;
+}
 
-      <section class="panel result-panel">
-        <h2>Result</h2>
-        <div id="resultBox">No video generated yet.</div>
-      </section>
-    </div>
+button {
+  border: none;
+  background: linear-gradient(135deg, #f97316, #ec4899);
+  color: white;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-    <script>
-      document.getElementById('generateForm').addEventListener('submit', async function (event) {
-        event.preventDefault();
-        const topic = document.getElementById('topic').value;
-        const uploadToYouTube = document.getElementById('uploadToYouTube').checked;
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-        const resultBox = document.getElementById('resultBox');
-        resultBox.textContent = 'Generating video...';
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
-        try {
-          const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ topic, upload_to_youtube: uploadToYouTube })
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            resultBox.innerHTML = `
-              <strong>Title:</strong> ${data.title}<br>
-              <strong>Script:</strong> ${data.script}<br>
-              <strong>Video:</strong> ${data.video_path}<br>
-              ${data.youtube_upload ? `<strong>YouTube:</strong> ${JSON.stringify(data.youtube_upload)}` : ''}
-            `;
-          } else {
-            resultBox.textContent = data.error || 'Something went wrong';
-          }
-        } catch (error) {
-          resultBox.textContent = 'Error generating video';
-        }
-      });
-
-      document.getElementById('scheduleForm').addEventListener('submit', async function (event) {
-        event.preventDefault();
-        const topic = document.getElementById('scheduledTopic').value;
-        const hour = document.getElementById('scheduleHour').value;
-        const minute = document.getElementById('scheduleMinute').value;
-        const scheduleUpload = document.getElementById('scheduleUpload').checked;
-
-        const response = await fetch('/api/schedule', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ topic, hour, minute, upload_to_youtube: scheduleUpload })
-        });
-
-        const data = await response.json();
-        const resultBox = document.getElementById('resultBox');
-        resultBox.innerHTML = `<strong>Scheduled:</strong> ${data.status}<br><strong>Time:</strong> ${data.time}<br><strong>Topic:</strong> ${data.topic}`;
-      });
-    </script>
-  </body>
-</html>
+.result-panel {
+  min-height: 180px;
+}
