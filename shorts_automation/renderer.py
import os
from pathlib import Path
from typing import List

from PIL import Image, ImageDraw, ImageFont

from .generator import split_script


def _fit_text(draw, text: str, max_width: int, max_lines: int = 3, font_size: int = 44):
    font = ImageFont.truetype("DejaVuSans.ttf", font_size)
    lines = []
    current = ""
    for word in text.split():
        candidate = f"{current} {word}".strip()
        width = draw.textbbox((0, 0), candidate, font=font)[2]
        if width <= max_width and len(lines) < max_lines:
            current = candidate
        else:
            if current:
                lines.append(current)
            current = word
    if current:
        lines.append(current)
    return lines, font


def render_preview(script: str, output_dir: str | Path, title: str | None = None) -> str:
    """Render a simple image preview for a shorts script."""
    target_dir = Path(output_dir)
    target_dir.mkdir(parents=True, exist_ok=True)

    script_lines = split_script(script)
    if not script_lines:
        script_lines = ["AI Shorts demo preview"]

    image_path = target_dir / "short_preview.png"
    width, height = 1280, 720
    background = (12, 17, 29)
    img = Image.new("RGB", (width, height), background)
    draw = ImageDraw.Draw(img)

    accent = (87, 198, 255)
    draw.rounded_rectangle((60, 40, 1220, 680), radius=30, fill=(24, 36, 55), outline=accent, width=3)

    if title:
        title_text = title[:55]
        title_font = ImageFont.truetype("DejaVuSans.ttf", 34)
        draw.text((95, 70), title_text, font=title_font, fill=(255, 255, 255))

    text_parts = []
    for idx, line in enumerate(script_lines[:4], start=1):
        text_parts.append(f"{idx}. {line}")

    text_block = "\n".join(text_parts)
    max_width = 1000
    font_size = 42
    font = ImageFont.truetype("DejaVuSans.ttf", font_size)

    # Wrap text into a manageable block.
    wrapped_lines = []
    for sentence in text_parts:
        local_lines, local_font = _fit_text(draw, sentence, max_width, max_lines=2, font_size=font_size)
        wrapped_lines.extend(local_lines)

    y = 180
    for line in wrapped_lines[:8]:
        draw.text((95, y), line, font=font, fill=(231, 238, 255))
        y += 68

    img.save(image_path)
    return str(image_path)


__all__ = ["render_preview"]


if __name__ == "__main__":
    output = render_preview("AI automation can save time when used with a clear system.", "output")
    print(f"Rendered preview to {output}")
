@@ -1,0 +1,71 @@
+import os
+from typing import List
+
+
+def make_script_from_prompt(topic: str, tone: str = "educational", audience: str = "beginners") -> str:
+    """Build a default script when no API key is available."""
+    title = topic.strip() or "AI productivity mistakes"
+    lines = [
+        f"Title: {title}",
+        "",
+        "Hook: Most people think AI saves time, but it can quietly create more work if you use it the wrong way.",
+        "",
+        "Body:",
+        f"1. Start with a clear use case before you automate anything in {title}.",
+        "2. Keep your prompts specific so the AI does not guess and produce generic output.",
+        "3. Review every result before you publish it, especially for accuracy and tone.",
+        "4. Use AI as a multiplier, not as a replacement for judgment.",
+        "",
+        "CTA: If you want better AI results, follow this simple system: define the goal, test the output, improve the prompt, and keep refining.",
+        "",
+        "Hashtags: #AI #Productivity #Automation #Shorts #CreatorTips",
+    ]
+    return "\n".join(lines)
+
+
+def generate_script(topic: str, tone: str = "educational", audience: str = "beginners") -> str:
+    """Generate a script using OpenAI if available, else fallback to a solid default."""
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    if api_key:
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=api_key)
+            response = client.chat.completions.create(
+                model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You write concise, high-retention YouTube Shorts scripts for an engaged audience.",
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Create a 20-30 second YouTube Shorts script about '{topic}'. "
+                            f"Tone should be {tone}. Audience is {audience}. "
+                            "Keep it engaging, punchy, and easy to read aloud."
+                        ),
+                    },
+                ],
+                temperature=0.8,
+                max_tokens=250,
+            )
+            text = response.choices[0].message.content.strip()
+            if text:
+                return text
+        except Exception:
+            pass
+
+    return make_script_from_prompt(topic, tone=tone, audience=audience)
+
+
+def split_script(script: str) -> List[str]:
+    chunks = []
+    for line in script.splitlines():
+        cleaned = line.strip()
+        if cleaned and not cleaned.lower().startswith(("title:", "hook:", "body:", "cta:", "hashtags:")):
+            chunks.append(cleaned)
+    if not chunks:
+        chunks = [part.strip() for part in script.split(".") if part.strip()]
+    return chunks
